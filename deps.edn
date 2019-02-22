@@ -4,8 +4,10 @@
                               com.bhauman/figwheel-main {:mvn/version "RELEASE"},
                               com.bhauman/rebel-readline-cljs {:mvn/version "RELEASE"}},
                  :extra-paths ["target"
+                               "../appkernel/src"
                                "../bindscript/src"
                                "../browser-headsup/src"
+                               "../conform/src"
                                "../domain-model/src"
                                "../facts-db/src"
                                "../material-desktop/src"],

@@ -1,8 +1,10 @@
 ^{:launch-js ["google-chrome" :open-url],
  :open-file-command "emacsclient",
  :watch-dirs ["src"
+              "../appkernel/src"
               "../bindscript/src"
               "../browser-headsup/src"
+              "../conform/src"
               "../domain-model/src"
               "../facts-db/src"
               "../material-desktop/src"]}

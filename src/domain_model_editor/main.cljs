@@ -5,12 +5,12 @@
    [material-desktop.app :as app]
    [material-desktop.ddapi-integration :as ddapi-integration]
 
-   [material-desktop.ddapi :as md-ddapi]
+   [material-desktop.components :as mdc]
+   [material-desktop.desktop :as desktop]
    [facts-db.ddapi :as ddapi]
-   [domain-model.api :as dm]
 
    [domain-model-editor.subs]
-   [domain-model-editor.editor :as editor]))
+   [domain-model-editor.model-workarea :as model-workarea]))
 
 
 (rf/reg-event-db
@@ -31,12 +31,23 @@
                  :id :kunagi/product-backlog-item}]])))
 
 
+(defn Workarea []
+  [model-workarea/ModelWorkarea :singleton])
 
+
+(defn AppbarToolbar []
+  [:div])
+
+
+(defn Desktop []
+  (desktop/Desktop
+   :appbar {:title [mdc/Double-DIV "Domain Model Editor" "Demo"]
+            :toolbar-components [[AppbarToolbar]]}
+   :workarea {:components [[Workarea]]}))
 
 
 (defn Root []
-  [editor/Editor])
-
+  [Desktop])
 
 (defn ^:export start []
   (app/start [Root])
