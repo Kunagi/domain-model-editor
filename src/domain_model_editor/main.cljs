@@ -1,15 +1,16 @@
 (ns domain-model-editor.main
   (:require
 
-   [domain-model-editor.ui-api]
-   [domain-model-editor.subs]
 
-   [domain-model-editor.desktop :as desktop]
-   [material-desktop.app :as app]))
+   [material-desktop.app :as app]
+   [domain-model.api]
+
+   [domain-model-editor.mod]
+   [domain-model-editor.components.desktop :refer [Desktop]]))
 
 
 (defn Root []
-  [desktop/Desktop])
+  [Desktop])
 
 
 (defn ^:export start []

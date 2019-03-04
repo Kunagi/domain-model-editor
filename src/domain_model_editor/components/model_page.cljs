@@ -1,11 +1,14 @@
-(ns domain-model-editor.model-workarea
+(ns domain-model-editor.components.model-page
   (:require
    ["@material-ui/core" :as mui]
    ["@material-ui/icons" :as icons]
+   [re-frame.core :as rf]
+
+   [facts-db.api :as db]
+   [material-desktop.desktop.api :as desktop]
    [material-desktop.api :refer [<subscribe dispatch>]]
    [material-desktop.components :as mdc]
    [material-desktop.toolbar :as toolbar]
-   [material-desktop.editing :as editing]
    [material-desktop.expansion-panel-list :as expansion-panel-list]))
 
 
@@ -18,18 +21,12 @@
 
 
 (defn ElementsToolbar
-  [element-type module-id]
+  [element-type create-trigger-event]
   [toolbar/PaperToolbar
    {:title (str element-type)}
    [:> mui/IconButton
     {:style {:color :inherit}
-     :on-click #(dispatch> [:desktop/form-dialog-triggered
-                            {:form-query [:domain-model-editor/new-element-form
-                                          {:element-type element-type
-                                           :module-id module-id}]}])}
-     ;; :on-click #(dispatch> [:domain-model-editor/create-element-triggered
-     ;;                        {:element-type element-type
-     ;;                         :module-id module-id}])}
+     :on-click #(dispatch> create-trigger-event)}
     [:> icons/Add]]])
 
 
@@ -41,7 +38,7 @@
     [:div
      {:style {:margin-top (mdc/spacing 1)}}
      [:> mui/Card
-      {:on-click #(js/console.log "click!")
+      {:on-click #(dispatch> (-> entity :goto-event))
        :style {:cursor :pointer}}
                ;;:min-width "200px"}}
       [:> mui/CardContent
@@ -56,8 +53,7 @@
 (defn EntitiesList
   [module]
   [:div
-   ;; (mdc/Data module)
-   [ElementsToolbar :entity (:db/id module)]
+   [ElementsToolbar :entity (-> module :create-events :entity)]
 
    (let [entities (-> module :entities)
          all-entities-by-id (reduce (fn [m entity]
@@ -71,19 +67,14 @@
                    [EntityAndComponentsCards root-entity all-entities-by-id])
                  root-entities)))])
 
-     ;; [mdc/CardsColumn
-     ;;  :cards (mapv (fn [entity]
-     ;;                 [mdc/CardContent
-     ;;                  [Entity entity]])
-     ;;               root-entities)])])
-
 
 (defn Module
-  [module]
-  [:div
-   [mdc/Double-H1 "Module" (:db/id module)]
-   [mdc/Columns
-    [EntitiesList module]]])
+  [module-subscription]
+  (let [module (<subscribe module-subscription)]
+    [:div
+     [mdc/Double-H1 "Module" (:db/id module) "Module"]
+     [mdc/Columns
+      [EntitiesList module]]]))
 
 
 
@@ -92,14 +83,24 @@
 
 (defn ModelWorkarea
   []
-  (let [model (<subscribe [:domain-model-editor/model-details])]
+  (let [model (<subscribe [:domain-model-editor/model])]
     [:div
      ;; [:hr]
      ;; (mdc/Data (<subscribe :domain-model/modules-ids {:model-id model-id}))
      ;; [:hr]
-     ;; (mdc/Data (<subscribe [:domain-model-editor/new-element-dialog]))
-     ;; [:hr]
      (into [:div]
-           (mapv (fn [module]
-                   [Module module])
-                 (-> model :modules)))]))
+           (mapv (fn [module-subscription]
+                   [Module module-subscription])
+                 (-> model :module-subscriptions)))]))
+     ;; [:hr]
+     ;; (mdc/Data (<subscribe [::db]))]))
+
+
+;;; re-frame events
+
+
+
+(rf/reg-sub
+ ::db
+ (fn [db _]
+   db))
