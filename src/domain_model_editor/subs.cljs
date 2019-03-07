@@ -7,19 +7,42 @@
 
 
 (rf/reg-sub
+ :domain-model/model
+ (fn [db _]
+   (get db :domain-model/model)))
+
+
+;; TODO move to domain model
+(rf/reg-sub
+ :domain-model/modules-idents
+ (fn [db _]
+   (-> db :domain-model/model :modules keys)))
+
+
+;; TODO move to domain model
+(rf/reg-sub
+ :domain-model/module
+ (fn [db [_ {:keys [module-ident]}]]
+   (-> db :domain-model/model :modules (get module-ident))))
+
+
+
+
+(rf/reg-sub
  :domain-model-editor/model
  (fn []
-   (rf/subscribe [:domain-model/db]))
- (fn [domain-model-db _]
-   (if-not domain-model-db
-     nil
-     (let [model (get domain-model-db :model)]
-       (-> model
-
-           ;; provide subscriptions for modules
-           (assoc :module-subscriptions
-                  (map (fn [module-id] [:domain-model-editor/module {:module-id module-id}])
-                       (get model :modules))))))))
+   (rf/subscribe [:domain-model/modules-idents]))
+ (fn [modules-idents _]
+   {:modules
+    (map (fn [module-ident]
+           {:ident module-ident
+            :goto-event [:material-desktop/activate-page
+                         {:page-key :domain-model-editor/module
+                          :page-args {:module-ident module-ident}}]})
+         modules-idents)
+    :module-subscriptions
+    (map (fn [module-id] [:domain-model-editor/module {:module-id module-id}])
+         modules-idents)}))
 
 
 
@@ -31,13 +54,13 @@
 
 (rf/reg-sub
  :domain-model-editor/module
- (fn []
-   (rf/subscribe [:domain-model/db]))
- (fn [domain-model-db [_ {:keys [module-id]}]]
-   (if-not domain-model-db
-     nil
-     (-> domain-model-db
-         (db/tree module-id {:entities {}})
+ (fn [[_ {:keys [module-ident]}]]
+   (rf/subscribe [:domain-model/module {:module-ident module-ident}]))
+ (fn [module _]
+   (let [module-id (db/fact module :module :db/id)]
+     (-> module
+         (db/tree module-id {:entities {}
+                             :events {}})
 
          (update :entities #(mapv assoc-goto-event-on-entity %))
 
